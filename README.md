@@ -6,6 +6,7 @@ These playbooks allow security teams to:
 Automatically identify and contain IPs associated with known CVEs.
 
 Enrich artifacts with reputation data to reduce noise and prioritize threats effectively.
+**Requirements:** Splunk SOAR version `6.4.1` or above 
 
 **Note:** These playbooks are customizable and can be adapted to run on newly created artifacts or other trigger conditions based on your workflow.
 
