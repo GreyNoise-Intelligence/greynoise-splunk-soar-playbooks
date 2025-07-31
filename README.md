@@ -58,7 +58,7 @@ This playbook retrieves IP addresses from GreyNoise associated with a specific C
 ### Playbook 2: Noise Elimination
 
 **Purpose:**  
-This playbook sets the severity level of an IP artifact based on GreyNoise reputation data for a single IP address.
+This playbook updates the severity level of an artifact based on GreyNoise reputation data for a single IP address.
 
 **Inputs:**
 This playbook utilizes an artifact field's value to execute the GreyNoise IP reputation action and obtain data on that IP. Ensure that the artifact IP path (e.g., `artifact:*.cef.sourceAddress`) is correctly set in the IP reputation action block of the playbook.
