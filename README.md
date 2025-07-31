@@ -3,11 +3,11 @@
 ## Introduction
 This repository contains example Splunk SOAR playbooks that integrate with GreyNoise threat intelligence to help automate and enhance your security operations.  
 These playbooks allow security teams to:  
-Automatically identify and contain IPs associated with known CVEs.
+- Automatically identify and contain IPs associated with known CVEs.
+- Enrich artifacts with reputation data to reduce noise and prioritize threats effectively.  
 
-Enrich artifacts with reputation data to reduce noise and prioritize threats effectively.
 
-**Requirements:** Splunk SOAR version `6.4.1` or above 
+**Requirements:** Splunk SOAR version `6.4.1.361` or above.
 
 **Note:** These playbooks are customizable and can be adapted to run on newly created artifacts or other trigger conditions based on your workflow.
 
@@ -18,28 +18,27 @@ Enrich artifacts with reputation data to reduce noise and prioritize threats eff
 ### Playbook 1: Network Containment
 
 **Purpose:**  
-This playbook retrieves IP addresses from GreyNoise that are associated with a specific CVE. It allows filtering based on classification, last seen time, and result limit to narrow down the query. The identified IPs are then automatically blocked using your configured firewall or security device (such as Fortigate or Zscaler).
+This playbook retrieves IP addresses from GreyNoise associated with a specific CVE. To narrow down the query, it allows filtering based on GreyNoise IP classification and last seen date, and also allows the user to limit the total result count to fit in the limitations of some firewalls. The identified IPs are then automatically blocked using the configured firewall or security device (such as Fortigate or Zscaler).  The blocking action will need to be updated depending on the required integration.
 
 **Inputs:**
 
 - **CVE ID (required):** A valid Common Vulnerabilities and Exposures identifier (e.g., CVE-2023-12345). Used to fetch IPs from GreyNoise.
 
-- **IP Classifications (optional):** Filter based on IP type. Options include:
+- **IP Classifications (optional):** Filters the returned IP list to only include IPs that match the specified classifications. When no option is included, IPs of any classification can exist in the returned list.  Options include:  
   - Benign (e.g., search engines)
   - Malicious (confirmed malicious)
   - Suspicious (probes, scanners)
-  - Unknown (unclassified IPs)  
+  - Unknown (internet scanners that do not meet any other classification)
   Multiple values can be entered as a comma-separated list (e.g., Malicious,Suspicious). Leave blank to include all classifications.
 
-- **Maximum IPs to Retrieve (optional):** Limits the number of IPs retrieved and blocked. Default is 100.
+- **Maximum IPs to Retrieve (optional):** This setting limits the number of IPs retrieved from the query that will be submitted for blocking. The default limit is `100`, but it should be adjusted according to the maximum number of IPs you intend to block for the specified firewall.  
 
-- **Time Filter (optional):** Restrict IPs based on when GreyNoise last observed them (e.g., 1d, 1w, today, yesterday).
+- **Time Filter (optional):** Limit IPs based on GreyNoise's last observation using the last_seen parameter. (valid options include but not limited to: 1d, 3d, 1w, 1m, today).  
 
 **Workflow:**
 
 - **GreyNoise GNQL Search**  
-  Executes a GNQL query using the CVE and other filters to retrieve a list of matching IPs with metadata.
-
+  Executes a GNQL query using the CVE and other filters to retrieve a list of matching IPs.
 - **IP Blocking Logic**
   - If the asset only supports blocking one IP per action, the playbook uses the custom function `ip_by_ip` to loop over each IP and block it individually.
   - If the asset supports blocking multiple IPs, it use the `Generate Comma Separated IPs` block to format the IP list into a comma-separated string and sends it in a single action.
@@ -59,10 +58,10 @@ This playbook retrieves IP addresses from GreyNoise that are associated with a s
 ### Playbook 2: Noise Elimination
 
 **Purpose:**  
-This playbook classifies event severity based on GreyNoise reputation data for a single IP address.
+This playbook sets the severity level of an IP artifact based on GreyNoise reputation data for a single IP address.
 
 **Inputs:**
-This playbook uses the value of an artifact field to perform IP reputation. Ensure that the artifact IP path (e.g., `artifact:*.cef.sourceAddress`) is correctly set in the IP reputation action block of the playbook.
+This playbook utilizes an artifact field's value to execute the GreyNoise IP reputation action and obtain data on that IP. Ensure that the artifact IP path (e.g., `artifact:*.cef.sourceAddress`) is correctly set in the IP reputation action block of the playbook.
 
 **To verify:**
 1. Open any container and go to the Artifacts tab.
@@ -79,8 +78,8 @@ You can also mention a custom data path in the same format as above if the key i
   - Malicious, Benign, Suspicious, or Unknown
 - Determines if the IP has been Seen or Not Seen by GreyNoise sensors.
 - Updates each artifact with two new fields:
-  - `greynoise_classification`
-  - `greynoise_observation`
+  - `greynoiseClassification`
+  - `greynoiseObservation`
 - Adjusts artifact severity based on the classification:
   - Malicious → High
   - Suspicious → Medium
@@ -88,7 +87,7 @@ You can also mention a custom data path in the same format as above if the key i
   - Unknown or Not Seen → No severity change
 
 **Key Notes:**
-- In case the IP is Not Seen on GreyNoise, the playbook will skip adding the `greynoise_classification` key to that artifact.
+- In case the IP is Not Seen on GreyNoise, the playbook will skip adding the `greynoiseClassification` key to that artifact.
 
 ---
 
@@ -102,7 +101,6 @@ After importing the playbooks into your Splunk SOAR environment, complete the fo
 - Go to Apps > GreyNoise > Configure New Asset
 - Set:
   - `api_key`: Your GreyNoise enterprise API key
-  - `base_url`: Optional, only if using a custom endpoint
 
 **Firewall/Security Asset (e.g., Zscaler, Fortigate)**
 - Determine whether the asset supports blocking one IP or multiple IPs.
