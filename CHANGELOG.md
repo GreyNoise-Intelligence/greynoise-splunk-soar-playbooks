@@ -1,2 +1,2 @@
 ## 1.0.0
-  - Initial Release Information
+  - Added Network-Containment and Noise-Elimination Playbooks for Splunk SOAR
